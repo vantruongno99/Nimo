@@ -19,7 +19,7 @@ Resources:
   # Each Lambda function is defined by properties:
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
-  # This is a Lambda function config associated with the source code: get-all-items.js
+  # Lambda for first microservice:
   getCryptoFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -27,12 +27,11 @@ Resources:
       Runtime: nodejs22.x
       Environment:                      
        Variables:
-        TABLE_NAME: CryptoSearchHistory
+        TABLE_NAME: !Ref CryptoSearchHistory
         SENDGRID_API_KEY: !Ref SendGridApiKey
       Policies:
-       - AmazonDynamoDBFullAccess
-       - SESCrudPolicy:  
-          IdentityName: "*"
+       - DynamoDBCrudPolicy:
+          TableName: !Ref CryptoSearchHistory
       Events:
         Api:
           Type: Api
@@ -40,8 +39,7 @@ Resources:
             Path: /
             Method: POST
   
-  # Each Lambda function is defined by properties:
-  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  # Lambda for second first microservice:
   getHistoryFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -49,9 +47,10 @@ Resources:
       Runtime: nodejs22.x
       Environment:                      
        Variables:
-        TABLE_NAME: CryptoSearchHistory
+        TABLE_NAME: !Ref CryptoSearchHistory
       Policies:
-       - AmazonDynamoDBFullAccess
+       - DynamoDBCrudPolicy:
+          TableName: !Ref CryptoSearchHistory
       Events:
         Api:
           Type: Api
@@ -59,7 +58,7 @@ Resources:
             Path: /history
             Method: GET
  
-  # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
+  # DynamoDB table to store history
   CryptoSearchHistory:
     Type: AWS::DynamoDB::Table
     Properties:

@@ -6,7 +6,7 @@ import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 import sgMail from '@sendgrid/mail'
-import {v4 as uuidv4} from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios';
 
 // Get the DynamoDB table name from environment variables
@@ -18,14 +18,16 @@ const SGApi = process.env.SENDGRID_API_KEY;
  */
 export const getCryptoHandler = async (event) => {
 
+  // Parse incoming request body for email and crypto 
   const { email, crypto } = JSON.parse(event.body);
-
+  // Set SendGrid API key for email sending
   sgMail.setApiKey(SGApi)
 
 
   let price;
 
   try {
+    // Get crypto detail from Coingecko API to get price in USD
     const res = await axios.get(`https://api.coingecko.com/api/v3/simple/price`, {
       params: { ids: crypto, vs_currencies: 'usd' }
     });
@@ -34,6 +36,7 @@ export const getCryptoHandler = async (event) => {
 
     price = res.data[crypto]?.usd;
 
+    // If price (crypto) is not found, throw an error
     if (!price) throw new Error('Crypto not found');
 
   }
@@ -46,11 +49,12 @@ export const getCryptoHandler = async (event) => {
   }
 
   try {
+    // Compose and send an email with the crypto price
     const msg = {
-      to: email, // Change to your recipient
-      from: 'vantruongno99@gmail.com', // Change to your verified sender
+      to: email,
+      from: 'vantruongno99@gmail.com',
       subject: `Crypto Price: ${crypto.toUpperCase()}`,
-      text:  `The current price of ${crypto.toUpperCase()} is $${price}`,
+      text: `The current price of ${crypto.toUpperCase()} is $${price}`,
     }
 
     await sgMail.send(msg)
@@ -65,10 +69,11 @@ export const getCryptoHandler = async (event) => {
   }
 
   try {
+    // Save email, crypto, price, and timestamp to DynamoDB table
     await ddbDocClient.send(new PutCommand({
       TableName: tableName,
       Item: {
-        id: uuidv4(),
+        id: uuidv4(), // Unique ID for the record
         email,
         crypto,
         price,
@@ -77,7 +82,7 @@ export const getCryptoHandler = async (event) => {
     }));
 
   }
-  catch(err) {
+  catch (err) {
 
     console.log(err)
 
@@ -88,11 +93,11 @@ export const getCryptoHandler = async (event) => {
   }
 
 
+  // Return success response with price
   const response = {
     statusCode: 200,
-    body: JSON.stringify(price)
+    body: JSON.stringify(`The current price of ${crypto.toUpperCase()} is $${price}`)
   };
 
-  // All log statements are written to CloudWatch
   return response;
 }
