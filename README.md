@@ -124,7 +124,7 @@ The base URL for the deployed API is: https://lw6h5lc5ag.execute-api.ap-southeas
 - **Body**:
   ```json
   {
-    message: 'Invalid crypto symbol or API error'
+    "error": "Invalid crypto or API error"
   }
   ```
 
