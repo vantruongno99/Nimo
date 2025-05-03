@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Nimo
+Transform:
+- AWS::Serverless-2016-10-31
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+
+
+Parameters:
+  SendGridApiKey:
+    Type: String
+    NoEcho: true
+    Description: "SendGrid API Key passed at deploy time"
+
+
+Resources:
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+  # This is a Lambda function config associated with the source code: get-all-items.js
+  getCryptoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/getCrypto.getCryptoHandler
+      Runtime: nodejs22.x
+      Environment:                      
+       Variables:
+        TABLE_NAME: CryptoSearchHistory
+        SENDGRID_API_KEY: !Ref SendGridApiKey
+      Policies:
+       - AmazonDynamoDBFullAccess
+       - SESCrudPolicy:  
+          IdentityName: "*"
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /
+            Method: POST
+  
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  getHistoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/getHistory.getHistoryHandler
+      Runtime: nodejs22.x
+      Environment:                      
+       Variables:
+        TABLE_NAME: CryptoSearchHistory
+      Policies:
+       - AmazonDynamoDBFullAccess
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /history
+            Method: GET
+ 
+  # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
+  CryptoSearchHistory:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: CryptoSearchHistory
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE  
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+Outputs:
+  WebEndpoint:
+    Description: API Gateway endpoint URL for Prod stage
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    LoggingConfig:
+      LogFormat: JSON
