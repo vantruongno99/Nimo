@@ -1,5 +1,4 @@
 # Nimo - Crypto Price Search API
-## Crypto Price Tracker API
 
 -	Search for a cryptocurrency price and receive it via email.
 -	View historical search data (optionally filtered by email).
@@ -88,7 +87,7 @@ The base URL for the deployed API is: https://lw6h5lc5ag.execute-api.ap-southeas
 
 #  API Documentation
 
-### 🔹**POST /**  : *Send a crypto price to an email & log the request*
+### 🔹**POST /**  - *Send a crypto price to an email & log the request*
 
 ### Request
 - **URL**: `/`
@@ -130,7 +129,7 @@ The base URL for the deployed API is: https://lw6h5lc5ag.execute-api.ap-southeas
 
 ---
 
-## 🔹 GET /history : Retrieve the search history for a given email
+## 🔹 GET /history - Retrieve the search history for a given email
 
 ### Request
 - **URL**: `/history`
